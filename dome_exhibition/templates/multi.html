@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Together We Glow</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/multi.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+    <style>
+        /* Animation style for multiplayer game interfaces */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 5px currentColor;
+            }
+            50% {
+                box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            10%, 30%, 50%, 70%, 90% {
+                transform: translateX(-5px);
+            }
+            20%, 40%, 60%, 80% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes playerJoin {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotate(-180deg);
+            }
+            50% {
+                transform: scale(1.2) rotate(90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes readyPulse {
+            0%, 100% {
+                background-color: #e74c3c;
+            }
+            50% {
+                background-color: #27ae60;
+            }
+        }
+
+        @keyframes countdown {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Page loading animation */
+        .game-container {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .game-container > * {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .game-container > *:nth-child(1) { animation-delay: 0.1s; }
+        .game-container > *:nth-child(2) { animation-delay: 0.2s; }
+        .game-container > *:nth-child(3) { animation-delay: 0.3s; }
+        .game-container > *:nth-child(4) { animation-delay: 0.4s; }
+        .game-container > *:nth-child(5) { animation-delay: 0.5s; }
+        .game-container > *:nth-child(6) { animation-delay: 0.6s; }
+
+        /* Title animation */
+        h1 {
+            animation: pulse 3s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(255, 110, 196, 0.5);
+        }
+
+        /* Room information animation */
+        .room-info-container {
+            animation: slideInLeft 0.8s ease-out 0.2s both;
+        }
+
+        .room-details h2 {
+            transition: all 0.3s ease;
+        }
+
+        .room-details h2:hover {
+            transform: translateX(10px);
+            color: #ff6ec4;
+        }
+
+        /* Player list animation */
+        .players-list {
+            animation: slideInRight 0.8s ease-out 0.4s both;
+        }
+
+        .players-list li {
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #ff6ec4;
+        }
+
+        .players-list li:hover {
+            transform: translateX(5px);
+            background: rgba(255, 110, 196, 0.1);
+        }
+
+        .players-list li.ready {
+            border-left-color: #27ae60;
+            animation: readyPulse 2s ease-in-out infinite;
+        }
+
+        .players-list li.joined {
+            animation: playerJoin 0.6s ease-out;
+        }
+
+        /* Animation of room control buttons */
+        .room-controls {
+            animation: slideInRight 0.8s ease-out 0.6s both;
+        }
+
+        .room-controls .btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .room-controls .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .room-controls .btn:hover::before {
+            left: 100%;
+        }
+
+        .room-controls .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #ready-btn.ready {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        /* 统计框动画 */
+        .stats-container {
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+
+        .stat-box {
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-value {
+            transition: all 0.3s ease;
+        }
+
+        .stat-value.updated {
+            animation: pulse 0.6s ease-out;
+            color: #27ae60;
+        }
+
+        /* Message box animation */
+        .message-box {
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out 1s both;
+        }
+
+        .message-box.game-over {
+            animation: shake 0.5s ease-in-out;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .message-box.countdown {
+            animation: countdown 1s ease-in-out;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6ec4;
+        }
+
+        /* Game button animations have been enhanced */
+        .game-board {
+            animation: fadeInUp 0.8s ease-out 1.2s both;
+        }
+
+        .color-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .color-btn:hover::before {
+            left: 100%;
+        }
+
+        .color-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-btn.active {
+            animation: glow 0.3s ease-in-out;
+        }
+
+        .color-btn.correct {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .color-btn.wrong {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Modal box animation enhancement */
+        .modal-content {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .modal-content h2 {
+            animation: bounce 1s ease-in-out;
+        }
+
+        .modal-content h3 {
+            animation: slideInLeft 0.8s ease-out 0.3s both;
+        }
+
+        #score-list {
+            animation: slideInRight 0.8s ease-out 0.5s both;
+        }
+
+        #score-list li {
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #score-list li:hover {
+            transform: translateX(5px);
+            background: rgba(255, 110, 196, 0.1);
+        }
+
+        #score-list li.winner {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Responsive animation adjustment */
+        @media (max-width: 768px) {
+            .color-btn:hover {
+                transform: translateY(-2px) scale(1.02);
+            }
+            
+            .stat-box:hover {
+                transform: translateY(-3px);
+            }
+
+            .room-details h2:hover {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff6ec4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success/failure status animation */
+        .success-animation {
+            animation: pulse 0.5s ease-in-out;
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .error-animation {
+            animation: shake 0.5s ease-in-out;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        /* Waiting for the animation */
+        .waiting {
+            animation: pulse 2s ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        /* Connection status indicator */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #27ae60;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .connection-status.disconnected {
+            background: #e74c3c;
+            animation: shake 0.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+    <body>
+
+        <!-- Connection status indicator -->
+        <div class="connection-status" id="connection-status"></div>
+
+        <div class="game-container">
+            <h1>Together We Glow</h1>
+
+            <!-- Room information and player list -->
+            <div class="room-info-container">
+                <div class="room-details">
+                    <h2>room: <span id="current-room">room1</span></h2>
+                    <h2>host: <span id="room-host">waiting...</span></h2>
+                    <h2>players:</h2>
+                    <ul class="players-list" id="player-list">
+                        <!-- 玩家列表将由JS动态加载 -->
+                    </ul>
+                </div>
+                <div class="room-controls">
+                    <button id="ready-btn" class="btn">ready</button>
+                    <button id="start-btn" class="btn">start</button>
+                    <button id="back-btn" class="btn">back</button>
+                </div>
+            </div>
+
+            <!-- Statistical information area -->
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-label">level</div>
+                    <div id="level-value" class="stat-value">1</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">score</div>
+                    <div id="score-value" class="stat-value">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">length</div>
+                    <div id="sequence-length" class="stat-value">3</div>
+                </div>
+            </div>
+
+
+            <!-- Message box -->
+            <div class="message-box" id="message-box">
+                Click the 'ready' button and wait for the host to start the game.
+            </div>
+
+            <!-- Game button area -->
+            <div class="game-board">
+                <div class="color-btn" data-color="red" id="red-btn">
+                    <span class="btn-label">red</span>
+                </div>
+                <div class="color-btn" data-color="blue" id="blue-btn">
+                    <span class="btn-label">blue</span>
+                </div>
+                <div class="color-btn" data-color="green" id="green-btn">
+                    <span class="btn-label">green</span>
+                </div>
+                <div class="color-btn" data-color="yellow" id="yellow-btn">
+                    <span class="btn-label">yellow</span>
+                </div>
+            </div>
+
+
+            <!-- Result pop-up -->
+            <div id="game-over-modal" class="modal-overlay">
+                <div class="modal-content">
+                    <h2>Game Over</h2>
+                    <p id="modal-message" style="font-style: italic; color: #7f8c8d;"></p>
+                    <h3>Score Board</h3>
+                    <ul id="score-list">
+                        <!-- The score list is dynamically loaded by JS -->
+                    </ul>
+                    <div>
+                        <button id="play-again-btn" class="btn success">Play Again</button>
+                        <button id="return-home-btn" class="btn primary">Return to Home</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const socket = io();
+            sessionStorage.setItem('has_played', 'true');  // Record the games the user has played
+
+            const playerNameFromServer = "{{ player_name }}";  // Passed in from the Flask template
+
+            // Encouragement Pool (for the game end mode box)
+            const encouragementMessages = [
+                "That is great! You have made a lot of progress!",
+                "Try again, you will definitely break through yourself!",
+                "Every failure is a step towards success!",
+                "Keep up the good work, victory is ahead!",
+                "Perseverance prevails!"
+            ];
+
+            let currentUsername = playerNameFromServer;
+            let currentRoom = "room1";
+            let selectedColors = []; 
+            let countdownInterval = null;
+            let gameActive = false;
+            let waitingForInput = false;
+            let targetSequence = [];
+
+            // DOM element reference
+            const levelValue = document.getElementById('level-value');
+            const scoreValue = document.getElementById('score-value');
+            const sequenceLength = document.getElementById('sequence-length');
+            const messageBox = document.getElementById('message-box');
+            const connectionStatus = document.getElementById('connection-status');
+            // const countdownEl = document.getElementById('countdown');
+            const roomHostEl = document.getElementById('room-host');
+            const playerListEl = document.getElementById('player-list');
+            const readyBtn = document.getElementById('ready-btn');
+            const startBtn = document.getElementById('start-btn');
+            const backBtn = document.getElementById('back-btn');
+            const colorButtons = {
+                red: document.getElementById('red-btn'),
+                blue: document.getElementById('blue-btn'),
+                green: document.getElementById('green-btn'),
+                yellow: document.getElementById('yellow-btn')
+            };
+            const gameOverModal = document.getElementById('game-over-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const scoreListModal = document.getElementById('score-list');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const returnHomeBtn = document.getElementById('return-home-btn');
+
+            // Connection status management
+            function updateConnectionStatus(connected) {
+                if (connected) {
+                    connectionStatus.classList.remove('disconnected');
+                    connectionStatus.title = 'Connected';
+                } else {
+                    connectionStatus.classList.add('disconnected');
+                    connectionStatus.title = 'Disconnected';
+                }
+            }
+
+            // Initialize the connection status
+            updateConnectionStatus(false);
+
+            // -------------------------- WebSocket Event monitoring-----------------------------
+
+            socket.on('connect', () => {
+                console.log("socket[connect]receive::Connected with sid", socket.id);
+                updateConnectionStatus(true);
+                // Send the sid to the backend to bind the username
+                socket.emit('register_user', { username: currentUsername, sid: socket.id });
+                joinRoom(); // Automatically join the room
+            });
+
+            socket.on('disconnect', () => {
+                console.log("socket[disconnect]receive:Disconnected from server");
+                updateConnectionStatus(false);
+                // Some UI prompts can be added, such as displaying "Disconnected".
+            });
+
+            // Update the player list
+            socket.on('update_players', (data) => {
+                console.log("socket[update_players]receive:", data);
+                playerListEl.innerHTML = '';       // Clear the list
+                let myScore = 0;
+                Object.entries(data.players).forEach(([name, info]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${name} - ${info.ready ? 'ready' : 'not ready'}`;
+                    playerListEl.appendChild(li);
+                });
+
+                roomHostEl.textContent = data.host;
+                startBtn.style.display = (data.host === currentUsername) ? "inline-block" : "none";
+                //readyBtn.style.display = (data.host !== currentUsername || !gameActive) ? "inline-block" : "none"; 
+                startBtn.disabled = !Object.values(data.players).every(p => p.ready);
+                updateGameButtonsState(gameActive); 
+            });
+
+            socket.on('game_started', (data) => {
+                console.log("socket[game_started]receive:", data);
+                gameActive = true;
+                waitingForInput = false; 
+                targetSequence = data.sequence;
+                levelValue.textContent = data.level;
+                sequenceLength.textContent = targetSequence.length;
+                messageBox.textContent = `Observe the light!`;
+
+                updateGameButtonsState(gameActive); 
+
+            });
+
+            // Listen for the "Do not Join" event
+            socket.on('join_denied', (data) => {
+                alert(data.message || "Unable to join room");
+                // Optional: Jump back to the mode selection page
+                setTimeout(() => {
+                    window.location.href = '/mode_selection';
+                }, 200);
+            });
+
+            // Update the score (each time entering the next round of the game)
+            socket.on('update_score', (data) => {
+                console.log("socket[update_score]receive:", data);
+                scoreValue.textContent = data.score;
+            });
+
+
+            // Game update event (new sequence or timeout notification)
+            socket.on('game_update', (data) => {
+                console.log("socket[game_update]receive:", data);
+                // console.log("Game update:", data);
+                if (data.status === 'ready_for_input') {
+                    gameActive = true;
+                    waitingForInput = false;
+                    targetSequence = data.sequence;
+                    levelValue.textContent = data.level;
+                    sequenceLength.textContent = targetSequence.length;
+
+                    messageBox.textContent = `Please click on the color buttons in order (sequence length: ${targetSequence. length})`;
+                    waitingForInput = true;
+                    updateGameButtonsState(gameActive);
+                    startCountdown(15); // 
+
+                }
+            });
+
+            socket.on('write_messageBox', (data) => { 
+                console.log("socket[write_messageBox]receive:", data);
+                messageBox.textContent = data.message;
+            });
+
+
+
+            socket.on('game_over', (data) => {
+                console.log("socket[game_over]receive:", data);
+                // console.log("Game Over:", data);
+                gameActive = false;
+                waitingForInput = false;
+                clearInterval(countdownInterval);
+                // countdownEl.textContent = ''; 
+                messageBox.textContent = "Game over! View the score board";
+                updateGameButtonsState(gameActive); 
+
+                showGameOverModal(data.scores);
+            });
+
+            // -------------------------- Function -------------------------
+
+            function joinRoom() {
+                let username = currentUsername;
+                let room = currentRoom;
+
+                socket.emit("join_room", { username, room });
+                console.log("username:", username, "enter room:", room)
+
+            }
+
+            document.getElementById("ready-btn").onclick = () => {
+                socket.emit('set_ready', { username: currentUsername, room: currentRoom });
+                readyBtn.disabled = true; 
+            };
+
+            document.getElementById("start-btn").onclick = () => {
+                if (startBtn.disabled) return; 
+                socket.emit('start_game', { username: currentUsername, room: currentRoom });
+                messageBox.textContent = "Observe the light!";
+            };
+
+            document.getElementById("back-btn").onclick = () => {
+                socket.emit('leave_room', { username: currentUsername, room: currentRoom });
+                window.location.href = '/';
+            };
+
+            Object.values(colorButtons).forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (!waitingForInput) return; 
+
+                    const color = btn.dataset.color;
+                    selectedColors.push(color);
+                    highlightButton(color);
+
+                    if (selectedColors.length === targetSequence.length) {
+                        submitAnswer();
+                    }
+                });
+            });
+
+
+            function submitAnswer() {
+                if (selectedColors.length === 0 && waitingForInput) {
+                    console.log("No answer submitted due to timeout.");
+                }
+                waitingForInput = false; 
+                clearInterval(countdownInterval); 
+                messageBox.textContent = "Next turn! Observe the lights!";
+
+                socket.emit('submit_answer', {
+                    username: currentUsername,
+                    room: currentRoom,
+                    answer: selectedColors
+                });
+
+                selectedColors = []; 
+                updateGameButtonsState(gameActive); 
+            }
+
+
+            function highlightButton(color) {
+                const btn = colorButtons[color];
+                if (!btn) return;
+
+                btn.classList.add('player-active'); 
+                setTimeout(() => {
+                    btn.classList.remove('player-active');
+                }, 300);
+            }
+
+
+            function startCountdown(seconds) {
+                messageBox.textContent = `Remaining time: ${seconds} s`;
+                clearInterval(countdownInterval); 
+
+                countdownInterval = setInterval(() => {
+                    seconds--;
+                    messageBox.textContent = `Remaining time: ${seconds} s`;
+                    if (seconds <= 0) {
+                        clearInterval(countdownInterval);
+                        messageBox.textContent = 'Time out! Waiting for other players ..';
+                        if (waitingForInput) {
+                           submitAnswer();
+                        }
+                    }
+                }, 1000);
+            }
+
+            function updateGameButtonsState(gameIsActive) {
+                Object.values(colorButtons).forEach(btn => {
+                    btn.classList.toggle('disabled', !gameIsActive || !waitingForInput);
+                });
+            }
+
+            function showGameOverModal(scores) {
+                const randomMsg = encouragementMessages[
+                    Math.floor(Math.random() * encouragementMessages.length)
+                ];
+                modalMessage.textContent = randomMsg;
+
+                scoreListModal.innerHTML = '';
+                Object.entries(scores).sort(([, scoreA], [, scoreB]) => scoreB - scoreA).forEach(([name, score]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${name}: ${score} pts`;
+                    if (name === currentUsername) {
+                        li.style.fontWeight = 'bold';
+                        li.style.color = 'red';
+                    }
+                    scoreListModal.appendChild(li);
+                });
+
+                gameOverModal.style.display = "flex";
+            }
+
+            playAgainBtn.addEventListener('click', () => {
+                gameOverModal.style.display = 'none';
+                window.location.href = '/multi';
+            });
+
+            returnHomeBtn.addEventListener('click', () => {
+                window.location.href = '/mode_selection';
+            });
+
+            gameOverModal.addEventListener('click', (event) => {
+                if (event.target === gameOverModal) {
+                    window.location.href = '/mode_selection';
+                }
+            });
+
+            window.addEventListener('load', () => {
+                document.getElementById('current-room').textContent = currentRoom; 
+                updateGameButtonsState(false); 
+            });
+
+        </script>
+
+
+    </body>
+</html>

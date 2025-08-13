@@ -1,0 +1,73 @@
+/* buttons.css - Common button styles */
+.btn {
+    display: inline-block;
+    padding: 20px 30px;
+    font-size: 3rem; 
+    font-weight: bold; 
+    text-align: center; 
+    text-decoration: none;
+    border: none;
+    border-radius: 20px; 
+    cursor: pointer;  
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; 
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Primary button style (e.g., Start, Save) */
+.btn.primary {
+    background: linear-gradient(to right, #4A90E2, #5DADE2); 
+    color: white;       
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3); 
+}
+
+.btn.primary:hover {
+    transform: translateY(-2px);      
+    box-shadow: 0 6px 15px rgba(74, 144, 226, 0.4);    
+}
+
+.btn.primary:active {
+    transform: translateY(1px);   
+}
+
+/* Success button style (e.g., Ready, Play Again) */
+.btn.success {
+    background: linear-gradient(to right, #2ecc71, #27ae60); /* Green gradient */
+    color: white;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.btn.success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn.success:active {
+    background-color: #27ae60;
+    transform: translateY(1px);
+}
+
+/* Danger button style (e.g., Reset) */
+.btn.danger {
+    background: linear-gradient(to right, #e74c3c, #c0392b); /* Red gradient */
+    color: white;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+}
+
+.btn.danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+}
+
+.btn.danger:active {
+    transform: translateY(1px);
+}
+
+/* Disabled button state */
+.btn:disabled, .btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
