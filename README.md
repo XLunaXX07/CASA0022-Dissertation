@@ -1,7 +1,7 @@
 # From Light to Play  
 ### A Geodesic Dome Installation Combining LED Interaction and Web-Based Memory Games  
 
-<img src="Dome.JPG" width="600"/>  
+<img src="media/Dome.JPG" width="600"/>  
 
 *This project explores how LED-based interaction and gamification can enhance engagement in shared environments.  
 The browser-based memory game integrated into this installation is titled **Together We Glow**.*
@@ -17,7 +17,7 @@ It was deployed in a **semi-public indoor exhibition** as a prototype to test ho
 
 ## System Architecture
 
-<img src="Structure.png" width="700"/>
+<img src="media/Structure.png" width="700"/>
 
 - **Raspberry Pi 4B**: runs Python, Flask, WebSocket  
 - **HC-SR04 ultrasonic sensor**: detects proximity  
@@ -38,21 +38,21 @@ It was deployed in a **semi-public indoor exhibition** as a prototype to test ho
 
 ## Circuit
 
-<img src="Circuit.PNG" width="600"/>  
-<img src="Diagram.PNG" width="600"/>  
+<img src="media/Circuit.PNG" width="600"/>  
+<img src="media/Diagram.PNG" width="600"/>  
 
 Prototype testing:  
-<img src="Test.JPG" width="600"/>
+<img src="media/Test.JPG" width="600"/>
 
 ---
 
 ## Web Interface
 
 **Homepage**  
-<img src="Homepage.jpg" width="400"/>  
+<img src="media/Homepage.jpg" width="400"/>  
 
 **Game**  
-<img src="Game.jpg" width="400"/>  
+<img src="media/Game.jpg" width="400"/>  
 
 Players scan a QR code, enter a username, select **single-player or multi-player mode**, and follow the LED sequence in the memory game.
 
