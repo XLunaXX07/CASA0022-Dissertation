@@ -39,7 +39,7 @@ It was deployed in a **semi-public indoor exhibition** as a prototype to test ho
 ## Circuit
 
 <img src="media/Circuit.PNG" width="600"/>  
-<img src="media/Diagram.PNG" width="600"/>  
+<img src="media/diagram.PNG" width="600"/>  
 
 Prototype testing:  
 <img src="media/Test.JPG" width="600"/>
