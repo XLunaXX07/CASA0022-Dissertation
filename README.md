@@ -36,13 +36,21 @@ It was deployed in a **semi-public indoor exhibition** as a prototype to test ho
 
 ---
 
-## Circuit
+## Circuit Design  
 
 <img src="media/Circuit.PNG" width="600"/>  
 <img src="media/diagram.PNG" width="600"/>  
 
-Prototype testing:  
-<img src="media/Test.JPG" width="600"/>
+**Prototype testing**  
+<img src="media/Test.JPG" width="600"/>  
+
+For reproducibility, the repository also includes a Fritzing project file [`dome_circuit_design.fzz`](dome_circuit_design.fzz), which contains:  
+
+- **Breadboard view** – prototype wiring  
+- **Schematic view** – logical circuit diagram  
+- **PCB view** – potential printed circuit board layout  
+
+Open with [Fritzing](https://fritzing.org/) to explore or modify the design.  
 
 ---
 
